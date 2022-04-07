@@ -1,0 +1,46 @@
+---
+title: "class_exercise"
+author: "Mia Forsline"
+date: "4/7/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Another example: Okuns Law (conceptual, abstract model) - try implementing this as a function
+
+Graph of US quarterly data (not annualized) from 1947 through 2002 estimates a form of the difference version of
+
+**Okun’s law:**
+
+%Change GDP = 0.856 - 1.827(Change Unemployment Rate)
+
+R^2 of .504.
+
+Differences from other results are partly due to the use of quarterly data http://en.wikipedia.org/wiki/Okun%27s_law
+
+Write the function in R!
+
+```{r}
+okuns_law <- function(perc_unemployment, intercept = 0.856, slope = 1.827){
+  perc_change_gdp = intercept - (slope * perc_unemployment)
+  return(perc_change_gdp)
+}
+```
+
+what is change in GDP for unemployment rate change of 3%
+
+```{r}
+okuns_law(perc_unemployment = 3)
+```
+
+
+what would the change in GDP be for 3% change in unemployment rate if the slope was 10% higher
+
+```{r}
+okuns_law(perc_unemployment = 3, slope = 1.827 * 1.1)
+```
+
