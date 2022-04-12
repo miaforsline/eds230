@@ -7,7 +7,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(tidyverse)
+library(here)
 ```
 
 ```{r}
@@ -21,6 +23,7 @@ flower_types = c("iris","daisy","poppy","rose","dandelion","weed","violet")
 # sample (with replacement)
 garden = sample(flower_types, size=20, replace=T)
 
+# use the function 
 compute_diversity(garden)
 
 ```
