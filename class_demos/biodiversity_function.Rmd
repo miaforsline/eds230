@@ -1,0 +1,27 @@
+---
+title: "biodiversity_function"
+author: "Mia Forsline"
+date: "4/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+# get the function
+source(here::here("class_demos", "compute_biodiversity.R"))
+
+# sampling categorical data
+# create possible values
+flower_types = c("iris","daisy","poppy","rose","dandelion","weed","violet")
+
+# sample (with replacement)
+garden = sample(flower_types, size=20, replace=T)
+
+compute_diversity(garden)
+
+```
+
