@@ -45,6 +45,8 @@ site1$annual
 site2 = solarpv(area=0.1, solar=sierraczosolar, clr="green", eunit="W", g=FALSE, eff=0.6, etype="direct")
 site2$mean
 
+
+#note that the first and last year 
 ```
 
 Informal Sensitivity Analysis
