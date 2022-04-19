@@ -14,11 +14,11 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-
 library(purrr)
-
 library(ggpubr)
 
+source(here::here("R", "solarpv.R"))
+sierraczosolar <- load(here::here("data", "sierraczosolar.rda"))
 ```
 
 
@@ -38,6 +38,7 @@ library(ggpubr)
 
 deviation = 0.15 #deviate 15% from the threshold where the max is 15% higher and the min is 15% lower 
 base_thresh = 10000
+
 ethresh = runif(min=base_thresh-deviation*base_thresh, 
                 max = base_thresh+deviation*base_thresh, n=20)
 
