@@ -43,7 +43,7 @@ years = seq(from=1, to=100, by=2)
 
 newparms = list(r=0.03, carry_capacity=300)
 
-#apply solver
+#apply solver - we input the differential equation and the ODE solver integrates it 
 results=ode(initialrabbits, years, dexppop_play,newparms)
 head(results)
 ```
@@ -87,6 +87,10 @@ ggplot(both_p, aes(year,P, col=model))+geom_point()+labs(y="Population", "years"
 
 What is ODE doing? (iterating in 'smart ways')
 
+- It is calculating the pop at one point in time, finding out the growth rate, then using that to calculate the pop at the next point in time.
+- Animal populations are discrete - we can't have 1/2 of a rabbit 
+- Discrete populations (rather than continuous) = we can implement something similar to the ODE solver by "stepping through" with a for loop 
+
 Similar to "difference equations"
 
 ## Difference Equations
@@ -103,7 +107,16 @@ source(here::here("R", "discrete_logistic_pop.R"))
 # starting with 1 rabbit - but a carrying capcity of 500
 
 discrete_logistic_pop
+```
 
+The ODE is building a difference equation, which we can use for a discrete population. 
+
+- time is also discrete in this case, so we're saying the population only grows once per year 
+- but what if the growth rate updates itself more often than once per year ? 
+- ODE solver is doing integration when we are worried about how finely we resolve time 
+- analytical solution = the change in time is infinitesimally small so there is no error 
+
+```{r iteratie}
 discrete_logistic_pop(P0=1, r=0.05, K=200, T=50)
 
 # save results
@@ -129,9 +142,12 @@ numerical integration using in discrete steps (discrete_logistic_pop.R)
 ```{r closed}
 exppop(P0=P0, r=r, K=K, T=T)
 analytic_result = exppop(P0=P0, r=r, K=K, T=T)
+```
 
-analytic_result
-discrete_result
+
+```{r closed}
+analytic_result #more accurate with smaller error 
+discrete_result #approximate answer 
 
 # why are they different
 # look at trajectories
@@ -150,6 +166,8 @@ ggplot(tmp, aes(time,P, col=Ptype))+geom_point()
 
 # try running them for longer time periods to see what happens 
 # change the value of r, K , P0 - see how it effects the results
+
+#over time, the discrete and analytical answers diverge 
 ```
 
 # Compare analytical, difference and ODE
@@ -180,5 +198,11 @@ tmp = growth_result %>% gather(key="Ptype",value="P",-time)
 ggplot(tmp, aes(time,P, col=Ptype))+geom_point()
 
 # notice Pdifferential is closer to Panalytic than Pdiscrete
+
+#red = analytical = most correct solution 
+#blue = looping
+#green = in the middle = closer to the analytical solution 
+
+#ODE = continuous 
 
 ```
