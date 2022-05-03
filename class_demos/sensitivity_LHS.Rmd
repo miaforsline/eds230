@@ -155,4 +155,130 @@ cor(yieldsd$maxyield, sens_pars$Tmincoeff2, method="spearman")
 cor(yieldsd$maxyield, sens_pars$Pcoeff2, method = "spearman")
 ```
 
+# Sobol 
+```{r}
+source(here::here("R", "Catm.R"))
+```
+
+
+```{r}
+# names of our parameters
+factors = c("k_o","k_d", "v","height")
+# type of distributions they arise from
+q = c("qnorm", "qnorm", "qnorm","qunif")
+# parameters for those distributions
+q.arg = list(list(mean=0.1,sd=0.1*0.1), list(mean=0.7, sd=0.7*0.1), list(mean=200, sd=10), 
+             list(min=5, max=15))
+
+nsets=200
+sens_Catm = LHS(NULL,factors,nsets,q,q.arg, nboot=500)
+# save parameter values
+sens.pars = get.data(sens_Catm)
+
+head(sens.pars)
+```
+```{r}
+ggplot(sens.pars, aes(k_o))+geom_density()
+ggplot(sens.pars, aes(x=k_o, y=k_d))+geom_density_2d()
+```
+
+```{r}
+sens_res = Catm(v=sens.pars$v, height=sens.pars$height, k_o=sens.pars$k_o, k_d=sens.pars$k_d)
+
+sens_Catm = tell(sens_Catm, sens_res, res.names="ga")
+
+
+# note it can take standard R plotting parameters
+plotscatter(sens_Catm, col="darkgreen", cex=5, ylab="Atm Cond (mm/s)")
+```
+
+```{r}
+# we can also plot partial correlation coefficients
+plotprcc(sens_Catm)
+```
+
+```{r}
+plotecdf(sens_Catm, col="red", lwd=5, xlab="Atm Cond (mm/s)")
+```
+
+```{r}
+np=1000
+k_o = rnorm(mean=0.1,sd=0.1*0.1, n=np)
+k_d = rnorm(mean=0.7, sd=0.7*0.1, n=np)
+v = rnorm(mean=200, sd=10, n=np)
+height = runif(min=5, max=15, n=np)
+
+
+X1 = cbind.data.frame(k_o, k_d, v, height=height)
+
+# repeat sampling
+k_o = rnorm(mean=0.1,sd=0.1*0.1, n=np)
+k_d = rnorm(mean=0.7, sd=0.7*0.1, n=np)
+v = rnorm(mean=200, sd=10, n=np)
+height = runif(min=5, max=15, n=np)
+
+X2 = cbind.data.frame(k_o, k_d, v, height=height)
+
+# there are different versions of sobol functions that have different approaches for estimating parameters and indices, we use an approach implemented by jansen 
+
+sens_Catm_Sobol = sobolSalt(model = NULL, X1, X2, nboot = 100)
+
+
+# Take a look at the Sobol generated sensitivity object
+# your parameters sets for sensitivity analysis are in X
+
+# run model for all parameter sets
+# make sure you give the parameters names
+
+parms = as.data.frame(sens_Catm_Sobol$X)
+colnames(parms)= colnames(X1)
+res = pmap_dbl(parms, Catm)
+
+
+sens_Catm_Sobol = sensitivity::tell(sens_Catm_Sobol,res, res.names="ga")
+
+# main effect:  partitions variance (main effect without co-variance) - sums approximately to one
+sens_Catm_Sobol$S
+```
+
+```{r}
+# useful to add names
+row.names(sens_Catm_Sobol$S) = colnames(parms)
+sens_Catm_Sobol$S
+```
+
+```{r}
+# total effect - accounts for parameter interactions
+row.names(sens_Catm_Sobol$T) = colnames(parms)
+sens_Catm_Sobol$T
+```
+
+```{r}
+# Both the main effect and total effect can tell us something about how the parameter influences results
+print(sens_Catm_Sobol)
+```
+
+```{r}
+# compare with LHS and PRCC
+sens_Catm$prcc
+```
+
+```{r}
+sens_Catm_Sobol$S
+#partitions the variance based on the parameters - most of the distribution is due to height 
+```
+
+```{r}
+sens_Catm_Sobol$T
+```
+
+```{r}
+# make a data frame for plotting
+both = cbind.data.frame(parms, gs=sens_Catm_Sobol$y)
+
+# look at response of conductance to the two most important variables
+ggplot(both, aes(v,gs, col=height))+geom_point()+labs(y="Conductance (mm/s)", x="Windspeed")
+```
+
+
 
