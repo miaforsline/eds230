@@ -51,13 +51,18 @@ filled.contour(t(result$conc), ylab="Time", xlab="Distance")
 ```{r}
 # changes diffusivity and other parameters particularly
 # diffusivity, dx and dt
-res=diff1(initialC=10,nx=10,dx=1,nt=10,dt=30,D=0.006,area=1)
 
-filled.contour(res$conc, xlab="Time", ylab="Distance")
+#concentration of 50 
+res1=diff1(initialC=50,nx=10,dx=1,nt=10,dt=30,D=0.015,area=1)
+
+res2=diff1(initialC=50,nx=10,dx=1,nt=50,dt=30,D=0.015,area=1)
+
+filled.contour(res1$conc, xlab="Time", ylab="Distance")
+filled.contour(res2$conc, xlab="Time", ylab="Distance")
 
 
 # we can also see how much material moved from place to place each time step
-filled.contour(res$qin, xlab="Time", ylab="Distance")
+#filled.contour(res$qin, xlab="Time", ylab="Distance")
 
 
 # play with time step, space step and parameters
