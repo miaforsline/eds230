@@ -9,14 +9,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(deSolve)
 library(sensitivity)
+library(here)
 ```
 
 
 ```{r sen}
-source("../R/dexppop_play.R")
+source(here("R", "dexppop_play.R"))
 
 dexppop_play
+```
 
+
+```{r sen}
 # lets start with sobel 
 library(sensitivity)
 
@@ -29,7 +33,7 @@ Pinitial=10
 # set the number of parameters
 np=100
 carry_capacity = rnorm(mean=400, sd=50, n=np)
-r = rnorm(mean=0.01, sd=0.005, n=np)
+r = rnorm(mean=0.01, sd=0.005, n=np) #growth rate of 0.01 
 X1 = cbind.data.frame(r=r, carry_capacity=carry_capacity)
 
 # repeat to get our second set of samples
@@ -43,7 +47,10 @@ sens_P = sobolSalt(model = NULL,X1, X2, nboot = 300)
 
 # our parameter sets are
 head(sens_P$X)
+```
 
+
+```{r sen}
 # lets add names 
 colnames(sens_P$X) = c("r","carry_capacity")
 
@@ -58,7 +65,7 @@ sens_P$X[1,]
 # initial population and timnes for which we want output 
 Pinitial
 
-# gets results for 200 years (evaluating every year)
+# gets results for 200 years (evaluating every year) - what is the pop for every year from 1 - 200 ? 
 simtimes = seq(from=1, to=200)
 parms = list(r=sens_P$X[1,"r"], carry_capacity=sens_P$X[1,"carry_capacity"])
 
@@ -68,6 +75,10 @@ parms = list(r=as.data.frame(sens_P$X)$r[1], carry_capacity=as.data.frame(sens_P
 result = ode(y=Pinitial, times=simtimes, func=dexppop_play, parms=parms)
 
 head(result)
+```
+
+
+```{r sen}
 colnames(result)=c("time","P")
 # turn it into a data frame
 result = as.data.frame(result)
@@ -94,7 +105,7 @@ Lets create two additional functions that will help us
 
 * a function that computes the metrics we want
 
-* a function that runs our ode solver and computes the metrics (I call it a wrapper function as it is really just a workflow/wrapper to call ode solver and then compute metrics)
+* a function that runs our ODE solver and computes the metrics (I call it a wrapper function as it is really just a workflow/wrapper to call ode solver and then compute metrics)
 ```{r sen2}
 # turn computing our metrics into a function
 
@@ -104,14 +115,17 @@ idx = which.max(result$P)
 maxyear = result$time[idx]
 return(list(maxpop=maxpop, maxyear=maxyear))}
 
-# try it on our first parameter set
+# try it on our first parameter set (Ex. we  want to know max pop and how long it took to get there)
 compute_metrics(result)
+```
 
+
+```{r sen2}
 # great but we need to apply the ode and this function for all of our parameters
 
 
 
-# define a wrapper function to do everything we need - run solver and compute metrics - and send back results for each parameter
+# define a wrapper function to do everything we need - run solver and compute metrics - and send back results for each parameter 
 
 p_wrapper = function(r,carry_capacity, Pinitial, simtimes, func) {
     parms = list(r=r, carry_capacity=carry_capacity)
@@ -121,8 +135,12 @@ p_wrapper = function(r,carry_capacity, Pinitial, simtimes, func) {
   metrics=compute_metrics(as.data.frame(result))
   return(metrics)
 }
+```
 
-# now use pmap as we did before
+
+```{r sen2}
+#now use pmap as we did before
+#uses the parameters we jut generated 
 
 allresults = as.data.frame(sens_P$X) %>% pmap(p_wrapper, Pinitial=Pinitial, simtimes=simtimes, func=dexppop_play)
 
@@ -133,6 +151,8 @@ allres = allresults %>% map_dfr(`[`,c("maxpop","maxyear"))
 # create boxplots
 tmp = allres %>% gather(key="metric", value="value")
 ggplot(tmp, aes(metric, value, col=metric))+geom_boxplot()
+
+#looks similar to Sobol in that we get 
 ```
 
 Compute the sobol indicies for each metric
@@ -147,15 +167,19 @@ sens_P_maxpop$S
 
 # total sensitivity index -note that this partitions the output variance - so values sum to 1
 sens_P_maxpop$T
+```
 
 
-
-
+```{r sen3}
 # create another one for max year
 sens_P_maxyear = sensitivity::tell(sens_P,allres$maxyear)
 # first-order indices (main effect without co-variance)
 sens_P_maxyear$S
 
+```
+
+
+```{r sen3}
 # total sensitivity index -note that this partitions the output variance - so values sum to 1
 sens_P_maxyear$T
 
