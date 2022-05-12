@@ -29,7 +29,7 @@ tm = seq(from=1, to=500) #time
 Pinitial = 1 #start with a sapling of one 
 gps = list(harv=0.18, K=100, r=0.2) #parameters 
 
-res = ode(Pinitial,tm, dharvest, gps) #put everything into the ODE soler 
+res = ode(Pinitial,tm, dharvest, gps) #put everything into the ODE solver 
 colnames(res)=c("time","carbon")
 
 ggplot(as.data.frame(res), aes(time, carbon))+geom_point()
@@ -204,3 +204,66 @@ ggplot(allresp, aes(harv, C50, col=r))+geom_point()
 
 # notice how we can see the impact of harvesting - and how growth rates reduce the sustainable harvest
 ```
+
+# May 12: Stability 
+
+```{r}
+# given some forest characteristics - lets look at derivatives under different harvest rates
+lowHrate = 0.015
+gps = list(harv=lowHrate, K=100, r=0.05)
+
+# look at the derivative over a range of forest sizes
+
+findstable = data.frame(Ccurr=seq(from=1, to=100, by=5))
+# notice use of Time=NULL, and map to compute derivative
+# for different values of forest biomass
+findstable$dervHlow= unlist(findstable$Ccurr %>% map(~dharvest(parms=gps, Time=NULL, P=.x) ))
+                                                  
+ggplot(findstable, aes(Ccurr, dervHlow))+geom_point()+geom_hline(yintercept = 0, col="red")+
+  labs(y="Derivative\n (Rate of change of forest carbon) (kg/C/year)", x="Current Forest Carbon Stock (kgC)")
+
+```
+
+```{r}
+# Populations will be stable when derivative is zero!
+
+# look at a different harvest rate
+midHrate=0.02
+gps = list(harv=midHrate, K=100, r=0.05)
+findstable$dervHmid= unlist(findstable$Ccurr %>% map(~dharvest(parms=gps, Time=NULL, P=.x) ))
+ 
+# try high rate
+highHrate=0.05
+gps = list(harv=highHrate, K=100, r=0.05)
+findstable$dervHhigh= unlist(findstable$Ccurr %>% map(~dharvest(parms=gps, Time=NULL, P=.x) ))
+ 
+
+# plot them all together
+tmp = gather(findstable, key="HarvestRate", value="value", -Ccurr)
+ggplot(tmp, aes(Ccurr, value, color=HarvestRate))+geom_point()+geom_hline(yintercept = 0, col="black")+
+  labs(x="Forest Biomass (kgC)", y="Forest Growth Rate (kgC/year)")
+
+# notice how with higher harvest rates the stable population will be lower
+```
+
+
+```{r}
+tm = seq(from=1, to=500)
+gps = list(harv=lowHrate, K=100, r=0.05)
+Pinitial=50
+res = ode(Pinitial,tm, dharvest, gps)
+colnames(res)=c("time","carbon")
+ggplot(as.data.frame(res), aes(time, carbon))+geom_point()+
+  labs(y="Forest Biomass (kgC)", x="Year", title="low harvest rate")
+
+```
+
+```{r}
+gps = list(harv=highHrate, K=100, r=0.05)
+Pinitial=50
+res = ode(Pinitial,tm, dharvest, gps)
+colnames(res)=c("time","carbon")
+ggplot(as.data.frame(res), aes(time, carbon))+geom_point()+
+ labs(y="Forest Biomass (kgC)", x="Year", title="High Harvest Rate")
+```
+
